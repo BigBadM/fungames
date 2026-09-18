@@ -2,35 +2,24 @@
   'use strict';
 
   // ---------------------------------------------------------------
-  // Screen management
+  // Screen elements
   // ---------------------------------------------------------------
-  const screens = {
-    menu: document.getElementById('menu-screen'),
-    store: document.getElementById('store-screen'),
-    game: document.getElementById('game-screen'),
-  };
-
-  function showScreen(name) {
-    Object.values(screens).forEach(s => s.classList.remove('active'));
-    screens[name].classList.add('active');
-  }
+  // There's only one real "screen" now (the game, which is always
+  // running). Home / pause / round-over are transparent overlays on
+  // top of it — see the .overlay rules in style.css.
+  const homeOverlay = document.getElementById('home-overlay');
+  const pauseOverlay = document.getElementById('pause-overlay');
+  const roundoverOverlay = document.getElementById('roundover-overlay');
+  const hud = document.getElementById('hud');
+  const pauseBtn = document.getElementById('pause-btn');
+  const hintEl = document.querySelector('.hint');
 
   document.getElementById('play-btn').addEventListener('click', () => {
-    showScreen('game');
+    homeOverlay.classList.remove('active');
+    hud.classList.remove('hidden');
+    pauseBtn.classList.remove('hidden');
+    hintEl.classList.remove('hidden');
     startGame();
-  });
-
-  document.getElementById('store-btn').addEventListener('click', () => showScreen('store'));
-  document.getElementById('store-back-btn').addEventListener('click', () => showScreen('menu'));
-
-  document.getElementById('quit-btn').addEventListener('click', () => {
-    stopGame();
-    showScreen('menu');
-  });
-
-  document.getElementById('roundover-quit-btn').addEventListener('click', () => {
-    stopGame();
-    showScreen('menu');
   });
 
   document.getElementById('playagain-btn').addEventListener('click', () => {
@@ -159,10 +148,7 @@
   const scoreDisplay = document.getElementById('score-display');
   const timerDisplay = document.getElementById('timer-display');
   const fpsDisplay = document.getElementById('fps-display');
-  const pauseOverlay = document.getElementById('pause-overlay');
-  const pauseBtn = document.getElementById('pause-btn');
   const resumeBtn = document.getElementById('resume-btn');
-  const roundoverOverlay = document.getElementById('roundover-overlay');
   const finalScoreDisplay = document.getElementById('final-score-display');
 
   let rafId = null;
@@ -176,10 +162,18 @@
     score: 0,
     timeLeft: CONFIG.timing.roundSeconds,
     roundOver: false,
+    // True before the player has hit Play (and again isn't used after
+    // that — there's no "back to menu" anymore). While true, moles still
+    // pop up for visual flavor behind the home overlay, but the timer
+    // doesn't run and clicks don't score.
+    attract: true,
     // One entry per hole in CONFIG.holes, same index.
     // moleState: 'hidden' | 'rising' | 'up' | 'falling'
     // progress: 0 (fully down) to 1 (fully up)
-    // hit: true while showing the hit-reaction image; reset on next pop
+    // hit: true from the moment a mole is successfully whacked until it
+    //      fully retreats — this is what makes it immune to further hits
+    //      while it's on its way down, so spam-clicking can't keep
+    //      resetting the hit animation and cancel the retreat.
     holes: [],
     // Only one mole is ever active at once — see resetHoles().
     activeHoleIndex: -1,
@@ -261,7 +255,7 @@
   }
 
   function handleHit(clientX, clientY) {
-    if (!running || paused || state.roundOver) return;
+    if (!running || paused || state.roundOver || state.attract) return;
     const rect = canvas.getBoundingClientRect();
     const x = (clientX - rect.left) * (canvas.width / rect.width);
     const y = (clientY - rect.top) * (canvas.height / rect.height);
@@ -270,7 +264,10 @@
     // feel natural.
     for (let i = state.holes.length - 1; i >= 0; i--) {
       const h = state.holes[i];
-      if (h.moleState === 'hidden' || h.progress < CONFIG.hitThreshold) continue;
+      // h.hit means this mole was already whacked and is retreating —
+      // it's immune until it's fully back down, so mashing the click
+      // can't keep re-triggering the hit and cancelling the retreat.
+      if (h.moleState === 'hidden' || h.progress < CONFIG.hitThreshold || h.hit) continue;
 
       const hole = CONFIG.holes[i];
       const groundX = hole.x * canvas.width;
@@ -287,7 +284,7 @@
       if (x >= boxX && x <= boxX + boxW && y >= boxY && y <= boxY + boxH) {
         h.progress = 1; // snap fully up so the fall — and the hit image — always plays out completely
         h.moleState = 'falling';
-        h.hit = true; // show the hit-reaction image until it resets on next pop
+        h.hit = true; // immune from here until it fully retreats (moleState becomes 'hidden')
         state.score += 1;
         scoreDisplay.textContent = state.score;
         break; // one hit per click
@@ -296,7 +293,7 @@
   }
 
   window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && running && !state.roundOver) togglePause();
+    if (e.key === 'Escape' && running && !state.roundOver && !state.attract) togglePause();
   });
 
   pauseBtn.addEventListener('click', togglePause);
@@ -309,6 +306,7 @@
   }
 
   function startGame() {
+    state.attract = false;
     state.score = 0;
     state.timeLeft = CONFIG.timing.roundSeconds;
     state.roundOver = false;
@@ -322,13 +320,7 @@
 
     running = true;
     lastTime = performance.now();
-    rafId = requestAnimationFrame(loop);
-  }
-
-  function stopGame() {
-    running = false;
-    if (rafId) cancelAnimationFrame(rafId);
-    rafId = null;
+    if (!rafId) rafId = requestAnimationFrame(loop);
   }
 
   function endRound() {
@@ -367,14 +359,18 @@
   function update(dt, now) {
     const { mole, timing } = CONFIG;
 
-    state.timeLeft -= dt;
-    if (state.timeLeft <= 0) {
-      state.timeLeft = 0;
-      timerDisplay.textContent = formatTime(0);
-      endRound();
-      return;
+    // While the home overlay is up, moles still animate for visual
+    // flavor, but the round timer doesn't run.
+    if (!state.attract) {
+      state.timeLeft -= dt;
+      if (state.timeLeft <= 0) {
+        state.timeLeft = 0;
+        timerDisplay.textContent = formatTime(0);
+        endRound();
+        return;
+      }
+      timerDisplay.textContent = formatTime(state.timeLeft);
     }
-    timerDisplay.textContent = formatTime(state.timeLeft);
 
     // Only one hole is ever active at a time. If none is active and
     // the wait is over, pick a random hole to pop up next.
@@ -549,5 +545,12 @@
     }
   }
 
+  // Kick off immediately in "attract" mode: the canvas is live and
+  // moles pop up behind the home overlay, but scoring/timer are inert
+  // until Play is pressed (see startGame()).
   resizeCanvas();
+  resetHoles();
+  running = true;
+  lastTime = performance.now();
+  rafId = requestAnimationFrame(loop);
 })();

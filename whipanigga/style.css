@@ -30,22 +30,94 @@ html, body {
   height: 100vh;
 }
 
-.screen {
+.hidden { display: none !important; }
+
+/* ---------- Game (the only screen now) ---------- */
+#game-screen {
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+}
+
+#game-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: #4a7c3f; /* grass fallback color, shows if backgroundmole.png is missing */
+  touch-action: none;
+  cursor: none;
+  z-index: 1;
+}
+
+#hud {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  right: 1rem;
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--font-display);
+  color: var(--text-dim);
+  font-size: 0.85rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+#hud .score { color: var(--accent); }
+
+.hud-badge {
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  padding: 0.4rem 0.9rem;
+  border-radius: 4px;
+}
+
+.hud-timer {
+  color: #ffffff;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+#pause-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  pointer-events: auto;
+  background: var(--bg-raised);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-family: var(--font-display);
+  font-weight: 700;
+  padding: 0.4rem 0.8rem;
+  cursor: pointer;
+  z-index: 2;
+}
+
+#pause-btn:hover { color: var(--text); border-color: var(--accent-dim); }
+
+/* ---------- Overlays (home / pause / round-over) ----------
+   All three share this look: a transparent dark scrim over the
+   live game canvas behind them. */
+.overlay {
   position: absolute;
   inset: 0;
   display: none;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  background: rgba(11, 14, 20, 0.85);
+  flex-direction: column;
+  gap: 1rem;
+  z-index: 3;
 }
 
-.screen.active { display: flex; }
+.overlay.active { display: flex; }
 
-/* ---------- Menu ---------- */
-#menu-screen {
-  background:
-    radial-gradient(circle at 50% 20%, rgba(94,225,193,0.08), transparent 60%),
-    var(--bg);
+.overlay h2 {
+  font-family: var(--font-display);
+  color: var(--text);
+  margin: 0;
 }
 
 .menu-box {
@@ -110,131 +182,6 @@ button.game-btn.primary:focus-visible {
   background: rgba(94, 225, 193, 0.06);
 }
 
-/* ---------- Store ---------- */
-#store-screen {
-  background: var(--bg);
-}
-
-.panel {
-  width: min(520px, 90vw);
-  max-height: 80vh;
-  overflow-y: auto;
-  border: 1px solid var(--line);
-  background: var(--bg-raised);
-  padding: 1.5rem;
-}
-
-.panel h2 {
-  font-family: var(--font-display);
-  margin: 0 0 1.25rem;
-  color: var(--text);
-  font-size: 1.3rem;
-}
-
-.store-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.9rem 0;
-  border-bottom: 1px solid var(--line);
-}
-
-.store-item:last-of-type { border-bottom: none; }
-
-.store-item-name { color: var(--text); }
-.store-item-desc { color: var(--text-dim); font-size: 0.8rem; margin-top: 0.2rem; }
-.store-item-price { font-family: var(--font-display); color: var(--accent); white-space: nowrap; margin-left: 1rem; }
-
-.back-btn {
-  margin-top: 1.5rem;
-}
-
-/* ---------- Game ---------- */
-#game-screen {
-  background: var(--bg);
-}
-
-#game-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  background: #4a7c3f; /* grass fallback color, shows if backgroundmole.png is missing */
-  touch-action: none;
-  cursor: none;
-  z-index: 1;
-}
-
-#hud {
-  position: absolute;
-  top: 1rem;
-  left: 1rem;
-  right: 1rem;
-  display: flex;
-  justify-content: space-between;
-  font-family: var(--font-display);
-  color: var(--text-dim);
-  font-size: 0.85rem;
-  pointer-events: none;
-  z-index: 2;
-}
-
-#hud .score { color: var(--accent); }
-
-.hud-badge {
-  background: var(--bg-raised);
-  border: 1px solid var(--line);
-  padding: 0.4rem 0.9rem;
-  border-radius: 4px;
-}
-
-.hud-timer {
-  color: #ffffff;
-  font-size: 1.3rem;
-  font-weight: 700;
-}
-
-#pause-btn {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  pointer-events: auto;
-  background: var(--bg-raised);
-  border: 1px solid var(--line);
-  color: var(--text);
-  font-family: var(--font-display);
-  font-weight: 700;
-  padding: 0.4rem 0.8rem;
-  cursor: pointer;
-  z-index: 2;
-}
-
-#pause-btn:hover { color: var(--text); border-color: var(--accent-dim); }
-
-#pause-overlay,
-#roundover-overlay {
-  position: absolute;
-  inset: 0;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  background: rgba(11, 14, 20, 0.85);
-  flex-direction: column;
-  gap: 1rem;
-  z-index: 3;
-}
-
-#pause-overlay.active,
-#roundover-overlay.active { display: flex; }
-
-#pause-overlay h2,
-#roundover-overlay h2 {
-  font-family: var(--font-display);
-  color: var(--text);
-  margin: 0;
-}
-
 #final-score-display {
   font-family: var(--font-display);
   color: var(--accent);
@@ -243,8 +190,13 @@ button.game-btn.primary:focus-visible {
 }
 
 .hint {
+  position: absolute;
+  bottom: 1rem;
+  left: 0;
+  right: 0;
+  text-align: center;
   color: var(--text-dim);
   font-size: 0.75rem;
   font-family: var(--font-display);
-  margin-top: 1rem;
+  z-index: 2;
 }
