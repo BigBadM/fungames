@@ -1,0 +1,21 @@
+{
+  "name": "ts-fruitdrop",
+  "version": "2025.1.0",
+  "repository": "git@github.com:HZ-HBO-ICT/ts-fruitdrop.git",
+  "author": "HZ University of Applied Sciences",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch "
+  },
+  "devDependencies": {
+    "@eslint/js": "9.28.0",
+    "@stylistic/eslint-plugin": "4.4.1",
+    "eslint": "9.28.0",
+    "eslint-plugin-jsdoc": "50.7.1",
+    "typescript": "5.8",
+    "typescript-eslint": "8.33.1"
+  }
+}
