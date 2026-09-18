@@ -10,71 +10,40 @@
 
 <div id="app">
 
-  <!-- MENU SCREEN -->
-  <section id="menu-screen" class="screen active">
-    <div class="menu-box">
-      <h1 class="title">FARM<span>_</span>WHACK</h1>
-      <p class="subtitle">// whack-a-mole, but it's a farm</p>
-      <div class="menu-buttons">
-        <button class="game-btn primary" id="play-btn">▶ Play</button>
-        <button class="game-btn" id="store-btn">⌂ Store</button>
-      </div>
-    </div>
-  </section>
-
-  <!-- STORE SCREEN -->
-  <section id="store-screen" class="screen">
-    <div class="panel">
-      <h2>Store</h2>
-      <div class="store-item">
-        <div>
-          <div class="store-item-name">Extra Round Time</div>
-          <div class="store-item-desc">Adds 15 seconds to each round</div>
-        </div>
-        <div class="store-item-price">100 pts</div>
-      </div>
-      <div class="store-item">
-        <div>
-          <div class="store-item-name">Slower Retreat</div>
-          <div class="store-item-desc">Animals stay up a little longer</div>
-        </div>
-        <div class="store-item-price">250 pts</div>
-      </div>
-      <div class="store-item">
-        <div>
-          <div class="store-item-name">Alt Skin: Golden Mole</div>
-          <div class="store-item-desc">Cosmetic animal reskin</div>
-        </div>
-        <div class="store-item-price">50 pts</div>
-      </div>
-      <button class="game-btn back-btn" id="store-back-btn">← Back</button>
-    </div>
-  </section>
-
-  <!-- GAME SCREEN -->
-  <section id="game-screen" class="screen">
-    <div id="hud">
+  <!-- GAME SCREEN (the only screen — everything else is an overlay on top of it) -->
+  <section id="game-screen">
+    <div id="hud" class="hidden">
       <span class="hud-badge">SCORE <span class="score" id="score-display">0</span></span>
       <span class="hud-badge hud-timer" id="timer-display">0:30</span>
       <span class="hud-badge" id="fps-display">60 FPS</span>
     </div>
-    <button id="pause-btn">II Pause</button>
+    <button id="pause-btn" class="hidden">II Pause</button>
     <canvas id="game-canvas"></canvas>
 
-    <div id="pause-overlay">
-      <h2>Paused</h2>
-      <button class="game-btn primary" id="resume-btn">▶ Resume</button>
-      <button class="game-btn" id="quit-btn">■ Quit to Menu</button>
+    <!-- HOME OVERLAY: shown on first load. Transparent so the game
+         (running in an idle "attract" state) is visible behind it. -->
+    <div id="home-overlay" class="overlay active">
+      <div class="menu-box">
+        <h1 class="title">FARM<span>_</span>WHACK</h1>
+        <p class="subtitle">// whack-a-mole, but it's a farm</p>
+        <div class="menu-buttons">
+          <button class="game-btn primary" id="play-btn">▶ Play</button>
+        </div>
+      </div>
     </div>
 
-    <div id="roundover-overlay">
+    <div id="pause-overlay" class="overlay">
+      <h2>Paused</h2>
+      <button class="game-btn primary" id="resume-btn">▶ Resume</button>
+    </div>
+
+    <div id="roundover-overlay" class="overlay">
       <h2>Time's Up!</h2>
       <p id="final-score-display">Score: 0</p>
       <button class="game-btn primary" id="playagain-btn">▶ Play Again</button>
-      <button class="game-btn" id="roundover-quit-btn">■ Quit to Menu</button>
     </div>
 
-    <p class="hint">click an animal when it pops up</p>
+    <p class="hint hidden">click an animal when it pops up</p>
   </section>
 
 </div>
